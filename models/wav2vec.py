@@ -15,7 +15,7 @@ class Wav2VecClassifier(nn.Module):
                                          pre-trained Wav2Vec model. Only the
                                          classifier head will be trained.
     """
-    def __init__(self, model_name="facebook/wav2vec2-base-960h", num_classes=1, freeze_feature_extractor=True):
+    def __init__(self, model_name="facebook/wav2vec2-base", num_classes=1, freeze_feature_extractor=True):
         super().__init__()
 
         # Load the pre-trained Wav2Vec model
@@ -43,7 +43,6 @@ class Wav2VecClassifier(nn.Module):
         print(f"Feature extractor frozen: {freeze_feature_extractor}")
         print(f"Output hidden size: {hidden_size}")
         print(f"Number of classes: {num_classes}")
-
 
     def forward(self, input_values, attention_mask=None):
         """

@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
-from transformers import AutoProcessor
+from transformers import AutoFeatureExtractor
 from functools import partial
 
 import librosa
@@ -28,7 +28,7 @@ CHECKPOINT_DIR = Path("checkpoints_bark_detector_wav2vec_v0")  # New dir for 2D 
 CHECKPOINT_DIR.mkdir(exist_ok=True)
 
 # Training params
-BATCH_SIZE = 64
+BATCH_SIZE = 256
 LEARNING_RATE = 0.0002
 NUM_EPOCHS = 50 # Adjust as needed
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -85,15 +85,15 @@ def train_epoch(model, dataloader, criterion, optimizer, device, processor):
 
     progress_bar = tqdm(dataloader, desc="Training", leave=False)
     for inputs, labels in progress_bar:
-        inputs, labels = {k: v.squeeze(0).to(DEVICE) for k, v in processor(inputs).items()}, labels.to(device)
+        inputs, labels = processor(inputs).input_values[0].to(device), labels.to(device)
         optimizer.zero_grad()
-        outputs = model(**inputs)
+        outputs = model(inputs)
         outputs = outputs.squeeze(1)  # Ensure shape [Batch] for BCEWithLogitsLoss
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
 
-        total_loss += loss.item() * inputs["input_values"].size(0)
+        total_loss += loss.item() * inputs.size(0)
         preds = torch.sigmoid(outputs).round().detach().cpu().numpy()
         all_preds.extend(preds)
         all_labels.extend(labels.cpu().numpy())
@@ -112,11 +112,11 @@ def evaluate_epoch(model, dataloader, criterion, device, processor):
     progress_bar = tqdm(dataloader, desc="Evaluating", leave=False)
     with torch.no_grad():
         for inputs, labels in progress_bar:
-            inputs, labels = {k: v.squeeze(0).to(DEVICE) for k, v in processor(inputs).items()} , labels.to(device)
-            outputs = model(**inputs)
+            inputs, labels = processor(inputs).input_values[0].to(device), labels.to(device)
+            outputs = model(inputs)
             outputs = outputs.squeeze(1) # Ensure shape [Batch]
             loss = criterion(outputs, labels)
-            total_loss += loss.item() * inputs["input_values"].size(0)
+            total_loss += loss.item() * inputs.size(0)
 
             all_outputs.extend(torch.sigmoid(outputs).cpu().numpy()) # Store probabilities
             all_labels.extend(labels.cpu().numpy())
@@ -238,8 +238,8 @@ if __name__ == "__main__":
         is_train=False,
         preload=True,
     )
-    processor_raw = AutoProcessor.from_pretrained("facebook/wav2vec2-base-960h")
-    processor = partial(processor_raw, sampling_rate=processor_raw.feature_extractor.sampling_rate, return_tensors="pt")
+    processor_raw = AutoFeatureExtractor.from_pretrained("facebook/wav2vec2-base-960h")
+    processor = partial(processor_raw, sampling_rate=16000, return_tensors="pt")
     # processor = AudioProcessor(
     #     transform=augment,
     #     device=DEVICE
