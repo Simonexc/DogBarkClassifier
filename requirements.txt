@@ -1,0 +1,16 @@
+scipy==1.15.2
+librosa
+soundfile
+numpy==2.2.4
+torch
+torchvision
+torchaudio
+scikit-learn
+tqdm
+torch-audiomentations
+pathlib
+matplotlib
+transformers
+
+Flask
+sounddevice

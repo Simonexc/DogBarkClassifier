@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bark Detector Log</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; }
+        h1 { color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background-color: #fff; box-shadow: 0 2px 3px rgba(0,0,0,0.1); }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #4CAF50; color: white; }
+        tr:hover { background-color: #f1f1f1; }
+        audio { width: 100%; max-width: 300px; height: 40px; margin-top: 5px;}
+        .container { max-width: 800px; margin: auto; }
+        .refresh-info { margin-top: 15px; font-size: 0.9em; color: #555; }
+    </style>
+    <!-- Add meta tag for auto-refresh every 10 seconds -->
+    <meta http-equiv="refresh" content="10">
+</head>
+<body>
+    <div class="container">
+        <h1>Dog Bark Detection Log</h1>
+        <p class="refresh-info">This page automatically refreshes every 10 seconds.</p>
+
+        {% if events %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Listen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event in events %}
+                    <tr>
+                        <td>{{ event.start_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td>{{ event.end_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td>
+                            <audio controls preload="none">
+                                <source src="{{ url_for('serve_bark_audio', filename=event.filename) }}" type="audio/wav">
+                                Your browser does not support the audio element.
+                            </audio>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No barks detected yet.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
