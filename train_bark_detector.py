@@ -86,7 +86,7 @@ def train_epoch(model, dataloader, criterion, optimizer, device, processor):
 
     progress_bar = tqdm(dataloader, desc="Training", leave=False)
     for inputs, labels in progress_bar:
-        inputs, labels = processor(list(inputs)).input_values.to(device), labels.to(device)
+        inputs, labels = processor(inputs).input_values.squeeze(0).to(device), labels.to(device)
         optimizer.zero_grad()
         outputs = model(inputs)
         outputs = outputs.logits.squeeze(1)  # Ensure shape [Batch] for BCEWithLogitsLoss
