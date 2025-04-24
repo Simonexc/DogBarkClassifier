@@ -113,9 +113,9 @@ def evaluate_epoch(model, dataloader, criterion, device, processor):
     progress_bar = tqdm(dataloader, desc="Evaluating", leave=False)
     with torch.no_grad():
         for inputs, labels in progress_bar:
-            inputs, labels = processor(inputs).input_values[0].to(device), labels.to(device)
+            inputs, labels = processor(inputs).input_values.squeeze(0).to(device), labels.to(device)
             outputs = model(inputs)
-            outputs = outputs.squeeze(1) # Ensure shape [Batch]
+            outputs = outputs.logits.squeeze(1) # Ensure shape [Batch]
             loss = criterion(outputs, labels)
             total_loss += loss.item() * inputs.size(0)
 
