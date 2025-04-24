@@ -254,7 +254,7 @@ if __name__ == "__main__":
 
     # 4. Initialize Model, Loss, Optimizer
     model = AutoModelForAudioClassification.from_pretrained("facebook/wav2vec2-base", num_labels=1, problem_type="single_label_classification").to(DEVICE)  # Wav2VecClassifier(num_classes=1).to(DEVICE)
-    model.feature_extractor._freeze_parameters()  # Freeze feature extractor
+    model.wav2vec2.feature_extractor._freeze_parameters()  # Freeze feature extractor
     criterion = nn.BCEWithLogitsLoss()
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
