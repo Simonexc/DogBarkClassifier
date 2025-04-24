@@ -19,16 +19,17 @@ import matplotlib.pyplot as plt
 from processing.dataset import AudioDataset
 from processing.sampler import BalancedBatchSampler
 from models.wav2vec import Wav2VecClassifier
+from transformers import AutoModelForAudioClassification
 
 # --- Configuration ---
 DATA_DIR = Path("data/processed")
 BARK_DIR = DATA_DIR / "bark"
 NO_BARK_DIR = DATA_DIR / "no_bark"
-CHECKPOINT_DIR = Path("checkpoints_bark_detector_wav2vec_v0")  # New dir for 2D model checkpoints
+CHECKPOINT_DIR = Path("checkpoints_bark_detector_wav2vec_v10")  # New dir for 2D model checkpoints
 CHECKPOINT_DIR.mkdir(exist_ok=True)
 
 # Training params
-BATCH_SIZE = 256
+BATCH_SIZE = 384
 LEARNING_RATE = 0.0002
 NUM_EPOCHS = 50 # Adjust as needed
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -238,7 +239,7 @@ if __name__ == "__main__":
         is_train=False,
         preload=True,
     )
-    processor_raw = AutoFeatureExtractor.from_pretrained("facebook/wav2vec2-base-960h")
+    processor_raw = AutoFeatureExtractor.from_pretrained("facebook/wav2vec2-base")
     processor = partial(processor_raw, sampling_rate=16000, return_tensors="pt")
     # processor = AudioProcessor(
     #     transform=augment,
@@ -252,7 +253,8 @@ if __name__ == "__main__":
     test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4, pin_memory=True)
 
     # 4. Initialize Model, Loss, Optimizer
-    model = Wav2VecClassifier(num_classes=1).to(DEVICE)
+    model = AutoModelForAudioClassification.from_pretrained("facebook/wav2vec2-base", num_labels=1, problem_type="single_label_classification").to(DEVICE)  # Wav2VecClassifier(num_classes=1).to(DEVICE)
+    model.feature_extractor._freeze_parameters()  # Freeze feature extractor
     criterion = nn.BCEWithLogitsLoss()
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
@@ -333,7 +335,7 @@ if __name__ == "__main__":
     )
 
     print("\n--- Finding Optimal Threshold and Evaluating Best Model ---")
-    best_model = Wav2VecClassifier(num_classes=1).to(DEVICE)
+    best_model = AutoModelForAudioClassification.from_pretrained("facebook/wav2vec2-base", num_labels=1, problem_type="single_label_classification").to(DEVICE) #Wav2VecClassifier(num_classes=1).to(DEVICE)
     best_model.load_state_dict(torch.load(best_model_path))  # Load best model weights
 
     test_loss, test_outputs, test_labels_final = evaluate_epoch(best_model, test_loader, criterion, DEVICE,
