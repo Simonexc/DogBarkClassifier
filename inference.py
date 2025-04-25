@@ -24,8 +24,9 @@ class ModelInference:
         if for_wav2vec2:
             preprocessed_data = self._wav2vec2_processor(
                 preprocessed_data, sampling_rate=16000, return_tensors="pt"
-            )["input_values"].squeeze(0).to(self._device)
+            )["input_values"].squeeze(0)
 
+        preprocessed_data = preprocessed_data.to(self._device)
         # Perform inference
         with torch.no_grad():
             if for_wav2vec2:
