@@ -98,7 +98,7 @@ def train_epoch(model, dataloader, criterion, optimizer, device, processor):
         inputs, labels = processor(inputs, apply_augment=True), labels.to(device)
         optimizer.zero_grad()
         outputs = model(inputs)
-        outputs = outputs.logits.squeeze(1)  # Ensure shape [Batch] for BCEWithLogitsLoss
+        outputs = outputs.squeeze(1)#.logits.squeeze(1)  # Ensure shape [Batch] for BCEWithLogitsLoss
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
@@ -124,7 +124,7 @@ def evaluate_epoch(model, dataloader, criterion, device, processor):
         for inputs, labels in progress_bar:
             inputs, labels = processor(inputs), labels.to(device)
             outputs = model(inputs)
-            outputs = outputs.logits.squeeze(1) # Ensure shape [Batch]
+            outputs = outputs.squeeze(1)#.logits.squeeze(1) # Ensure shape [Batch]
             loss = criterion(outputs, labels)
             total_loss += loss.item() * inputs.size(0)
 
