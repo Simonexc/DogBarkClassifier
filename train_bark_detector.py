@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 
 from processing.dataset import AudioDataset
 from processing.sampler import BalancedBatchSampler
+from processing.processor import AudioProcessor
 from models.wav2vec import Wav2VecClassifier
 from transformers import AutoModelForAudioClassification
 
@@ -25,13 +26,13 @@ from transformers import AutoModelForAudioClassification
 DATA_DIR = Path("data/processed")
 BARK_DIR = DATA_DIR / "bark"
 NO_BARK_DIR = DATA_DIR / "no_bark"
-CHECKPOINT_DIR = Path("checkpoints_bark_detector_wav2vec_v10")  # New dir for 2D model checkpoints
+CHECKPOINT_DIR = Path("checkpoints_bark_detector_wav2vec_v11")  # New dir for 2D model checkpoints
 CHECKPOINT_DIR.mkdir(exist_ok=True)
 
 # Training params
 BATCH_SIZE = 384
 LEARNING_RATE = 0.0002
-NUM_EPOCHS = 50 # Adjust as needed
+NUM_EPOCHS = 10 # Adjust as needed
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 RANDOM_SEED = 42 # For deterministic split
 
@@ -41,6 +42,14 @@ P_TIME_STRETCH = 0.5 # Stretch sound
 P_OVERLAP = 0.0      # Overlap bark and no_bark (applied only on no_bark samples)
 P_NOISE = 0.5        # Add noise
 P_PITCH_SHIFT = 0.5  # Optional: Add pitch shift
+
+augment = Compose([
+    #Gain(min_gain_in_db=-6, max_gain_in_db=6, p=P_GAIN),
+    # TimeStretch(min_rate=0.8, max_rate=1.2, leave_length_unchanged=False, p=P_TIME_STRETCH), # Must handle length change
+    AddColoredNoise(min_snr_in_db=3, max_snr_in_db=30, p=P_NOISE, sample_rate=16000),
+    PitchShift(min_transpose_semitones=-4, max_transpose_semitones=4, p=P_PITCH_SHIFT, sample_rate=16000), # Optional
+])
+augment.to(DEVICE)
 
 # --- Set Seed for Reproducibility ---
 def set_seed(seed):
@@ -86,7 +95,7 @@ def train_epoch(model, dataloader, criterion, optimizer, device, processor):
 
     progress_bar = tqdm(dataloader, desc="Training", leave=False)
     for inputs, labels in progress_bar:
-        inputs, labels = processor(inputs).input_values.squeeze(0).to(device), labels.to(device)
+        inputs, labels = processor(inputs, apply_augment=True), labels.to(device)
         optimizer.zero_grad()
         outputs = model(inputs)
         outputs = outputs.logits.squeeze(1)  # Ensure shape [Batch] for BCEWithLogitsLoss
@@ -113,7 +122,7 @@ def evaluate_epoch(model, dataloader, criterion, device, processor):
     progress_bar = tqdm(dataloader, desc="Evaluating", leave=False)
     with torch.no_grad():
         for inputs, labels in progress_bar:
-            inputs, labels = processor(inputs).input_values.squeeze(0).to(device), labels.to(device)
+            inputs, labels = processor(inputs), labels.to(device)
             outputs = model(inputs)
             outputs = outputs.logits.squeeze(1) # Ensure shape [Batch]
             loss = criterion(outputs, labels)
@@ -240,11 +249,15 @@ if __name__ == "__main__":
         preload=True,
     )
     processor_raw = AutoFeatureExtractor.from_pretrained("facebook/wav2vec2-base")
-    processor = partial(processor_raw, sampling_rate=16000, return_tensors="pt")
-    # processor = AudioProcessor(
-    #     transform=augment,
-    #     device=DEVICE
-    # )
+    processor_audio = AudioProcessor(
+        transform=augment,
+        device=DEVICE
+    )
+    def processor(waveform, apply_augment = False):
+        if apply_augment:
+            waveform = processor_audio(waveform.to(DEVICE)).cpu()
+        return processor_raw(waveform, sampling_rate=16000, return_tensors="pt").input_values.squeeze(0).to(DEVICE)
+
     sampler = BalancedBatchSampler(train_dataset, batch_size=BATCH_SIZE)
 
     # 3. Create DataLoaders
