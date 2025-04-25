@@ -71,7 +71,7 @@ class AudioDataset(Dataset):
                 bark_file_idx = self.file_paths.index(random.choice(self.bark_file_paths))
                 bark_waveform = self._data[bark_file_idx]
 
-                bark_gain = random.uniform(0.4, 0.9)
+                bark_gain = random.uniform(0.6, 0.9)
 
                 waveform = self._combine_waveforms(bark_waveform, waveform, bark_gain)
 
