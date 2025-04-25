@@ -26,7 +26,7 @@ from transformers import AutoModelForAudioClassification
 DATA_DIR = Path("data/processed")
 BARK_DIR = DATA_DIR / "bark"
 NO_BARK_DIR = DATA_DIR / "no_bark"
-CHECKPOINT_DIR = Path("checkpoints_bark_detector_wav2vec_v12")  # New dir for 2D model checkpoints
+CHECKPOINT_DIR = Path("checkpoints_bark_detector_wav2vec_v20")  # New dir for 2D model checkpoints
 CHECKPOINT_DIR.mkdir(exist_ok=True)
 
 # Training params
@@ -39,7 +39,7 @@ RANDOM_SEED = 42 # For deterministic split
 # Augmentation probabilities
 P_GAIN = 0.5         # Modify loudness
 P_TIME_STRETCH = 0.5 # Stretch sound
-P_OVERLAP = 0.2      # Overlap bark and no_bark (applied only on no_bark samples)
+P_OVERLAP = 0.0      # Overlap bark and no_bark (applied only on no_bark samples)
 P_NOISE = 0.5        # Add noise
 P_PITCH_SHIFT = 0.5  # Optional: Add pitch shift
 
@@ -266,8 +266,9 @@ if __name__ == "__main__":
     test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4, pin_memory=True)
 
     # 4. Initialize Model, Loss, Optimizer
-    model = AutoModelForAudioClassification.from_pretrained("facebook/wav2vec2-base", num_labels=1, problem_type="single_label_classification").to(DEVICE)  # Wav2VecClassifier(num_classes=1).to(DEVICE)
-    model.wav2vec2.feature_extractor._freeze_parameters()  # Freeze feature extractor
+    #model = AutoModelForAudioClassification.from_pretrained("facebook/wav2vec2-base", num_labels=1, problem_type="single_label_classification").to(DEVICE)  # Wav2VecClassifier(num_classes=1).to(DEVICE)
+    #model.wav2vec2.feature_extractor._freeze_parameters()  # Freeze feature extractor
+    model = Wav2VecClassifier()
     criterion = nn.BCEWithLogitsLoss()
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
