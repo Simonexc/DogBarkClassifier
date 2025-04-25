@@ -71,7 +71,7 @@ class AudioProcessor:
         waveforms = waveforms.to(device=self._device)
         if self.transform:
             waveforms = self.transform(samples=waveforms.unsqueeze(1)).squeeze(1)
-
+        return waveforms
         # --- Compute Log-Mel Spectrogram ---
         mel_spec = self.mel_spectrogram(waveforms)
         log_mel_spec = self.amplitude_to_db(mel_spec)
