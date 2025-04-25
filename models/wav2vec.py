@@ -35,7 +35,7 @@ class Wav2VecClassifier(nn.Module):
 
         # Freeze the Wav2Vec model layers if requested
         if freeze_feature_extractor:
-            self.wav2vec2.feature_extractor._freeze_parameters()
+            self.wav2vec.feature_extractor._freeze_parameters()
 
         print(f"Loaded Wav2Vec model: {model_name}")
         print(f"Feature extractor frozen: {freeze_feature_extractor}")
