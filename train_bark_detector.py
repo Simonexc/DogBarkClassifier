@@ -26,7 +26,7 @@ from transformers import AutoModelForAudioClassification
 DATA_DIR = Path("data/processed")
 BARK_DIR = DATA_DIR / "bark"
 NO_BARK_DIR = DATA_DIR / "no_bark"
-CHECKPOINT_DIR = Path("checkpoints_bark_detector_wav2vec_v11")  # New dir for 2D model checkpoints
+CHECKPOINT_DIR = Path("checkpoints_bark_detector_wav2vec_v12")  # New dir for 2D model checkpoints
 CHECKPOINT_DIR.mkdir(exist_ok=True)
 
 # Training params
@@ -39,7 +39,7 @@ RANDOM_SEED = 42 # For deterministic split
 # Augmentation probabilities
 P_GAIN = 0.5         # Modify loudness
 P_TIME_STRETCH = 0.5 # Stretch sound
-P_OVERLAP = 0.0      # Overlap bark and no_bark (applied only on no_bark samples)
+P_OVERLAP = 0.2      # Overlap bark and no_bark (applied only on no_bark samples)
 P_NOISE = 0.5        # Add noise
 P_PITCH_SHIFT = 0.5  # Optional: Add pitch shift
 
@@ -236,7 +236,7 @@ if __name__ == "__main__":
         file_paths=train_files,
         labels=train_labels,
         bark_file_paths=all_bark_files,
-        p_overlap=0.0,
+        p_overlap=P_OVERLAP,
         is_train=True,
         preload=True,
     )
