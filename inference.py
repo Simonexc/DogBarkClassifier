@@ -11,7 +11,7 @@ class ModelInference:
     def __init__(self, model_path: str, threshold: float):
         self.threshold = threshold
         self._device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self._model = AutoModelForAudioClassification.from_pretrained("facebook/wav2vec2-base", num_labels=1, problem_type="single_label_classification")  #SpectrogramCNN(num_classes=1).to(self._device)
+        self._model = AutoModelForAudioClassification.from_pretrained("facebook/wav2vec2-base", num_labels=1, problem_type="single_label_classification").to(self._device)  #SpectrogramCNN(num_classes=1).to(self._device)
         self._model.load_state_dict(torch.load(model_path, map_location=self._device))
         self._processor = AudioProcessor(device=self._device)
         self._wav2vec2_processor = AutoFeatureExtractor.from_pretrained("facebook/wav2vec2-base")
