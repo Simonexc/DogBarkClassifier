@@ -32,7 +32,7 @@ CHECKPOINT_DIR.mkdir(exist_ok=True)
 # Training params
 BATCH_SIZE = 384
 LEARNING_RATE = 0.0002
-NUM_EPOCHS = 10 # Adjust as needed
+NUM_EPOCHS = 15 # Adjust as needed
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 RANDOM_SEED = 42 # For deterministic split
 
