@@ -349,7 +349,7 @@ if __name__ == "__main__":
     )
 
     print("\n--- Finding Optimal Threshold and Evaluating Best Model ---")
-    best_model = AutoModelForAudioClassification.from_pretrained("facebook/wav2vec2-base", num_labels=1, problem_type="single_label_classification").to(DEVICE) #Wav2VecClassifier(num_classes=1).to(DEVICE)
+    best_model = Wav2VecClassifier(num_classes=1).to(DEVICE)  # #AutoModelForAudioClassification.from_pretrained("facebook/wav2vec2-base", num_labels=1, problem_type="single_label_classification").to(DEVICE)
     best_model.load_state_dict(torch.load(best_model_path))  # Load best model weights
 
     test_loss, test_outputs, test_labels_final = evaluate_epoch(best_model, test_loader, criterion, DEVICE,

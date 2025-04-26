@@ -30,7 +30,7 @@ class Wav2VecClassifier(nn.Module):
         # We use a simple linear layer on top of the pooled Wav2Vec output
         self.classifier1 = nn.Linear(hidden_size, 256)
         self.relu = nn.ReLU()
-        self.dropout = nn.Dropout(0.2)
+        self.dropout = nn.Dropout(0.1)
         self.classifier2 = nn.Linear(256, num_classes)
 
         # Freeze the Wav2Vec model layers if requested
@@ -72,6 +72,6 @@ class Wav2VecClassifier(nn.Module):
 
         # Pass the pooled output through the classifier
         # Output shape: [Batch, num_classes]
-        logits = self.classifier2(self.relu(self.dropout(self.classifier1(pooled_output))))
+        logits = self.classifier2(self.dropout(self.relu(self.classifier1(pooled_output))))
 
         return logits
